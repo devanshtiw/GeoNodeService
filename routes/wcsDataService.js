@@ -83,12 +83,12 @@ module.exports = function (client) {
 
         //Formatting Data to send in response
         var closestWCS = {};
-        closestWCS["CHECKDAMS"] = checkdams1;
-        closestWCS["BOREWELLS"] = borewells1;
-        closestWCS["FARMPONDS"] = farmponds1;
-        closestWCS["MI_TANKS"] = mitanks1;
-        closestWCS["OTHER_WC"] = others1;
-        closestWCS["PERCU_TANKS"] = pt1;
+        closestWCS["checkdam_existing"] = checkdams1;
+        closestWCS["borewell"] = borewells1;
+        closestWCS["farmpond"] = farmponds1;
+        closestWCS["mi_tanks"] = mitanks1;
+        closestWCS["others"] = others1;
+        closestWCS["percolation_tank"] = pt1;
 
         // console.log(closestWCS);
 
