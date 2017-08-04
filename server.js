@@ -20,6 +20,11 @@ client.on('error', function(err) {
 	console.log('server: Connection Terminated!');
 });
 
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  // application specific logging, throwing an error, or other logic here
+});
+
 app.use(compress());
 app.use(bodyParser.json({
     limit: '50mb'
