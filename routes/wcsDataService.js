@@ -22,7 +22,7 @@ module.exports = function(client) {
         if (Object.keys(data).length == 0)
             return res.send("0");
         else
-            console.log('wcsDataService: ' + new Date().toString() + ": Data Received");
+            console.log('wcsDataService: ' + new Date().toString() + ': Data Received');
         var file = 'logs/JSON_wcsService' + new Date().getTime().toString() + '.json';
         jsonfile.writeFile(file, data, function(err) {
             if (err)
@@ -32,17 +32,13 @@ module.exports = function(client) {
         var keys = dateFormatter(data);
         var rcount = 0;
         for (var i = 0; i < keys.length; i++) {
-            if (data.hasOwnProperty(keys[i])) {
-                for (var id in data[keys[i]]) {
-                    if (data[keys[i]].hasOwnProperty(id)) {
-                        var rowd = getFormattedRowData(data[keys[i]][id]);
-                        if (rowd != -1) {
-                            insertWCSData(id, rowd);
-                            rcount++;
-                        } else {
-                            logError("wcsDataService: ID " + id + " does not have property dailyStorageData");
-                        }
-                    }
+          for (var id in data[keys[i]]) {
+                var rowd = getFormattedRowData(data[keys[i]][id]);
+                if (rowd != -1) {
+                    insertWCSData(id, rowd);
+                    rcount++;
+                } else {
+                    logError("wcsDataService: ID " + id + " does not have property dailyStorageData");
                 }
             }
         }
@@ -68,30 +64,31 @@ module.exports = function(client) {
 
       var farmponds0 = await executeQuery(farmponds_query0);
 
-      var checkdams = await executeQuery(checkdams_query);
-      var borewells = await executeQuery(borewells_query);
-      var farmponds = await executeQuery(farmponds_query);
-      var mitanks = await executeQuery(mitanks_query);
-      var others = await executeQuery(others_query);
-      var pt = await executeQuery(pt_query);
+      var checkdams1 = await executeQuery(checkdams_query);
+      var borewells1 = await executeQuery(borewells_query);
+      var farmponds1 = await executeQuery(farmponds_query);
+      var mitanks1 = await executeQuery(mitanks_query);
+      var others1 = await executeQuery(others_query);
+      var pt1 = await executeQuery(pt_query);
 
-      farmponds = union(farmponds0, farmponds);
+      farmponds1 = union(farmponds0, farmponds1);
 
+      //Formatting Data to send in response
       var closestWCS = {};
-      closestWCS["CHECKDAMS"] = checkdams;
-      closestWCS["BOREWELLS"] = borewells;
-      closestWCS["FARMPONDS"] = farmponds;
-      closestWCS["MI_TANKS"] = mitanks;
-      closestWCS["OTHER_WC"] = others;
-      closestWCS["PERCU_TANKS"] = pt;
+      closestWCS["CHECKDAMS"] = checkdams1;
+      closestWCS["BOREWELLS"] = borewells1;
+      closestWCS["FARMPONDS"] = farmponds1;
+      closestWCS["MI_TANKS"] = mitanks1;
+      closestWCS["OTHER_WC"] = others1;
+      closestWCS["PERCU_TANKS"] = pt1;
 
       console.log(closestWCS);
-
 
       // var closestWCS = checkdams.concat(borewells,farmponds, mitanks, others, pt);
       res.json(closestWCS)
     }
 
+    //getQuery0For will give closest structure including zero storage
     function getQuery0For(lat, lng, tablename){
       if(tablename === postgresTables["FARMPONDS"]){
         return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
@@ -103,8 +100,7 @@ module.exports = function(client) {
       return -1;
     }
 
-    //If there is some Promise unhandled exception thrown, please check the logs Log_WCSDataService<Date>.txt file for error logs. Error along with the query
-    //can be checked there.
+    //getQuery1For will give closest structures with storage greater than 0
     function getQuery1For(lat, lng, tablename){
       if(tablename === postgresTables["CHECKDAMS"]){
         return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
@@ -155,7 +151,8 @@ module.exports = function(client) {
       }
       return '-1';
     }
-
+    //If there is some Promise unhandled exception thrown, please check the logs Log_WCSDataService<Date>.txt file for error logs. Error along with the query
+    //can be checked there.
     async function executeQuery(query){
         try{
           var result = await client.query(query);
@@ -194,24 +191,11 @@ module.exports = function(client) {
             var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
             if (diffDays > 30 || date == "invalid date")
                 return -1;
-            if (arr1.length >= 1)
-                row.push(arr1[0]);
-            else
-                row.push(null);
+            (arr1.length >= 1)?row.push(arr1[0]):row.push(null);
             var arr2 = arr1[1].toString().split('#');
-            if (arr2.length >= 1)
-                row.push(arr2[0]);
-            else
-                row.push(null);
-            if (data.hasOwnProperty('imageURL')) {
-                row.push(data.imageURL);
-            } else {
-                row.push(null);
-            }
-            if (arr2.length == 2)
-                row.push(arr2[1]);
-            else
-                row.push(null);
+            (arr2.length >= 1)?row.push(arr2[0]):row.push(null);
+            data.hasOwnProperty('imageURL')?row.push(data.imageURL):row.push(null);
+            (arr2.length == 2)?row.push(arr2[1]):row.push(null);
             return row;
         } else {
             return -1;
@@ -229,7 +213,7 @@ module.exports = function(client) {
 
     //Function to insert rows in the tables with the data received in the API.
     function insertWCSData(id, rowdata) {
-            var querystmt = 'UPDATE "' + posgresTables['IWM_DATA'] + '" SET iwm_timest =\'' + rowdata[0] + '\' , iwm_storag = \'' +
+            var querystmt = 'UPDATE "' + postgresTables['IWM_DATA'] + '" SET iwm_timest =\'' + rowdata[0] + '\' , iwm_storag = \'' +
                 rowdata[1] + '\' , iwm_image_ = \'' + rowdata[2] + '\' , source_type = \'' + rowdata[3] + '\' WHERE iwm_wcs_id = \'' + id + '\';';
             var query = client.query(querystmt, function(err, result) {
             if (err) {
