@@ -3,6 +3,7 @@
 var jsonfile = require('jsonfile'),
     fs = require('fs');
 
+
 module.exports = function(client) {
 
     var service = {
@@ -59,9 +60,9 @@ module.exports = function(client) {
       var checkdams_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["CHECKDAMS"]);
       var borewells_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["BOREWELLS"]);
       var farmponds_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["FARMPONDS"]);
-      var mitanks_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["MITANKS"]);
-      var others_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["OTHERS"]);
-      var pt_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["PT"]);
+      var mitanks_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["MI_TANKS"]);
+      var others_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["OTHER_WC"]);
+      var pt_query = getQuery1For(req.query.lat,req.query.lng,postgresTables["PERCU_TANKS"]);
 
       var farmponds_query0 = getQuery0For(req.query.lat, req.query.lng, postgresTables["FARMPONDS"])
 
@@ -74,19 +75,27 @@ module.exports = function(client) {
       var others = await executeQuery(others_query);
       var pt = await executeQuery(pt_query);
 
-
       farmponds = union(farmponds0, farmponds);
 
-      var closestWCS = checkdams.concat(borewells,farmponds, mitanks, others, pt);
-      console.log(closestWCS.length);
-      res.json(closestWCS)
+      var closestWCS = {};
+      closestWCS["CHECKDAMS"] = checkdams;
+      closestWCS["BOREWELLS"] = borewells;
+      closestWCS["FARMPONDS"] = farmponds;
+      closestWCS["MI_TANKS"] = mitanks;
+      closestWCS["OTHER_WC"] = others;
+      closestWCS["PERCU_TANKS"] = pt;
 
+      console.log(closestWCS);
+
+
+      // var closestWCS = checkdams.concat(borewells,farmponds, mitanks, others, pt);
+      res.json(closestWCS)
     }
 
     function getQuery0For(lat, lng, tablename){
       if(tablename === postgresTables["FARMPONDS"]){
-        return 'select "external_id","capacity", \'FARMPONDS\' as "type", "new_villag", "dsply_n", "dname_1",' +
-        ' "latitude", "longitude", "geom", "iwm_wcs_id", "iwm_storag", "iwm_timest", "iwm_image_", "source_type"'+
+        return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
+        ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" '+
         'from "' + postgresTables["FARMPONDS"] + '" ' +
         'order by "geom" <-> st_setsrid(st_makepoint(18.006973,83.446453),4326) '+
         'limit 1'
@@ -94,50 +103,52 @@ module.exports = function(client) {
       return -1;
     }
 
+    //If there is some Promise unhandled exception thrown, please check the logs Log_WCSDataService<Date>.txt file for error logs. Error along with the query
+    //can be checked there.
     function getQuery1For(lat, lng, tablename){
       if(tablename === postgresTables["CHECKDAMS"]){
-        return 'select "external_id", "capacity", \'CHECKDAMS\' as "type", "new_villag", "dsply_n", "dname_1",' +
-        ' "latitude", "longitude", "geom", "iwm_wcs_id", "iwm_storag", "iwm_timest", "iwm_image_", "source_type"' +
+        return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
+        ' "latitude", "longitude", "iwm_storag", \'CHECKDAMS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
         'from "' + postgresTables["CHECKDAMS"] + '" ' +
         'where CAST("iwm_storag" as DECIMAL) > 0' +
         'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
         'limit 3'
       }
       else if (tablename === postgresTables["BOREWELLS"]){
-        return 'select "external_id", "pump_capac", \'BOREWELLS\' as "type", "new_villag", "dsply_n", "dname_1", ' +
-        '"latitude", "longitude", "geom", "iwm_wcs_id", "iwm_storag", "iwm_timest", "iwm_image_", "source_type"' +
+        return 'select "external_id", "pump_capac", "new_villag", "dsply_n", "dname_1", ' +
+        '"latitude", "longitude", "iwm_wcs_id", \'BOREWELLS\' as "type"' +
         'from "' + postgresTables["BOREWELLS"] + '"' +
         'order by "geom" <-> st_setsrid(st_makepoint(18.006973,83.446453),4326)'+
         'limit 3';
       }
       else if(tablename === postgresTables["FARMPONDS"]){
-        return 'select "external_id","capacity", \'FARMPONDS\' as "type", "new_villag", "dsply_n", "dname_1",'
-        +' "latitude", "longitude", "geom", "iwm_wcs_id", "iwm_storag", "iwm_timest", "iwm_image_", "source_type"'+
+        return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
+        ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" '+
         'from "' + postgresTables["FARMPONDS"] + '" ' +
         'where CAST("iwm_storag" as DECIMAL) > 0' +
         'order by "geom" <-> st_setsrid(st_makepoint(18.006973,83.446453),4326) '+
         'limit 3'
       }
-      else if(tablename === postgresTables["MITANKS"]){
-        return 'select "external_id", "capacity", \'MI_TANKS\' as "type", "new_villag", "dsply_n", "dname_1",' +
-        ' "latitude", "longitude", "geom", "iwm_wcs_id", "iwm_storag", "iwm_timest", "iwm_image_", "source_type" ' +
-        'from "' + postgresTables["MITANKS"] + '"' +
+      else if(tablename === postgresTables["MI_TANKS"]){
+        return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
+        ' "latitude", "longitude", "iwm_storag", "iwm_timest", "iwm_image_", \'MI_TANKS\' as "type", "iwm_wcs_id" ' +
+        'from "' + postgresTables["MI_TANKS"] + '"' +
         'where CAST("iwm_storag" as DECIMAL) > 0 ' +
         'order by "geom" <-> st_setsrid(st_makepoint(18.006973,83.446453),4326) ' +
         'limit 3'
       }
-      else if(tablename === postgresTables["OTHERS"]){
-        return 'select "external_id", "capacity", \'OTHERS_WC\' as "type", "new_villag", "dsply_n", "dname_1",' +
-        ' "longitude", "latitude", "geom", "iwm_wcs_id", "iwm_storag", "iwm_timest", "iwm_image_", "source_type"' +
-        'from "' + postgresTables["OTHERS"] + '"' +
+      else if(tablename === postgresTables["OTHER_WC"]){
+        return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
+        ' "longitude", "latitude", "iwm_storag", \'OTHERS_WC\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
+        'from "' + postgresTables["OTHER_WC"] + '"' +
         'where CAST("iwm_storag" as DECIMAL) > 0' +
         'order by "geom" <-> st_setsrid(st_makepoint(18.006973,83.446453),4326)' +
         'limit 3'
       }
-      else if(tablename === postgresTables["PT"]){
-        return 'select "external_id", "capacity",\'PERCULATION_TANK\' as "type", "new_villag", "dsply_n",' +
-        ' "dname_1", "longitude", "latitude", "geom", "iwm_wcs_id", "iwm_storag", "iwm_timest", "iwm_image_", "source_type"' +
-        'from "' + postgresTables["PT"] + '" ' +
+      else if(tablename === postgresTables["PERCU_TANKS"]){
+        return 'select "external_id", "capacity", "new_villag", "dsply_n",' +
+        ' "dname_1", "longitude", "latitude", \'PERCULATION_TANK\' as "type", "iwm_wcs_id" ' +
+        'from "' + postgresTables["PERCU_TANKS"] + '" ' +
         'where CAST("iwm_storag" as DECIMAL) > 0' +
         'order by "geom" <-> st_setsrid(st_makepoint(18.006973,83.446453),4326)' +
         'limit 3'
@@ -149,10 +160,10 @@ module.exports = function(client) {
         try{
           var result = await client.query(query);
         }catch(err){
-          logError('wcsDataService: Error In Select Query: ' + err);
+          logError('wcsDataService: Error In Select Query: ' + err + ' Query: ' +  query);
         }
-        if(result.rowCount != 3){
-          logError('wcsDataService: Problem in Table, less than 3 rows fetched \n' + query );
+        if(result.rowCount == 0){
+          logError('wcsDataService: Problem in Table, 0 rows fetched \n' + query );
         }
         var data = [];
         for(var row in result.rows)
@@ -258,10 +269,10 @@ module.exports = function(client) {
       "CHECKDAMS": "check_dams_view",
       "FARMPONDS": "farm_ponds_view",
       "BOREWELLS": "borewells_view",
-      "CHECKDAMS_PROPOSED": "checkdam_proposed_view",
-      "MITANKS": "mi_tanks_view",
-      "PT": "pt_view",
-      "OTHERS": "others_view",
+      "CHECKDAMS_P": "checkdam_proposed_view",
+      "MI_TANKS": "mi_tanks_view",
+      "PERCU_TANKS": "pt_view",
+      "OTHER_WC": "others_view",
       "IWM_DATA": "iwm_data"
     }
 
