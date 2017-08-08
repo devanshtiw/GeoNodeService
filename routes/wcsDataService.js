@@ -102,7 +102,7 @@ module.exports = function (client) {
             return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["FARMPONDS"] + '" ' +
-                'order by "geom" <-> st_setsrid(st_makepoint(18.006973,83.446453),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
                 'limit 1'
         }
         return -1;
