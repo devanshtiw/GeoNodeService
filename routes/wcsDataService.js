@@ -97,32 +97,32 @@ module.exports = function (client) {
     }
 
     //getQuery0For will give closest structure including zero storage
-    function getQuery0For(lat, lng, tablename) {
+    function getQuery0For(lng, lat, tablename) {
         if (tablename === postgresTables["FARMPONDS"]) {
             return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["FARMPONDS"] + '" ' +
-                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 1'
         }
         return -1;
     }
 
     //getQuery1For will give closest structures with storage greater than 0
-    function getQuery1For(lat, lng, tablename) {
+    function getQuery1For(lng, lat, tablename) {
         if (tablename === postgresTables["CHECKDAMS"]) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'CHECKDAMS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["CHECKDAMS"] + '" ' +
                 'where CAST("iwm_storag" as DECIMAL) > 0' +
-                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
         else if (tablename === postgresTables["BOREWELLS"]) {
             return 'select "external_id", "pump_capac", "new_villag", "dsply_n", "dname_1", ' +
                 '"latitude", "longitude", "iwm_wcs_id", \'BOREWELLS\' as "type"' +
                 'from "' + postgresTables["BOREWELLS"] + '"' +
-                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3';
         }
         else if (tablename === postgresTables["FARMPONDS"]) {
@@ -130,7 +130,7 @@ module.exports = function (client) {
                 ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["FARMPONDS"] + '" ' +
                 'where CAST("iwm_storag" as DECIMAL) > 0' +
-                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
         else if (tablename === postgresTables["MI_TANKS"]) {
@@ -138,7 +138,7 @@ module.exports = function (client) {
                 ' "latitude", "longitude", "iwm_storag", "iwm_timest", "iwm_image_", \'MI_TANKS\' as "type", "iwm_wcs_id" ' +
                 'from "' + postgresTables["MI_TANKS"] + '"' +
                 'where CAST("iwm_storag" as DECIMAL) > 0 ' +
-                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
         else if (tablename === postgresTables["OTHER_WC"]) {
@@ -146,7 +146,7 @@ module.exports = function (client) {
                 ' "longitude", "latitude", "iwm_storag", \'OTHERS_WC\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["OTHER_WC"] + '"' +
                 'where CAST("iwm_storag" as DECIMAL) > 0' +
-                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
         else if (tablename === postgresTables["PERCU_TANKS"]) {
@@ -154,7 +154,7 @@ module.exports = function (client) {
                 ' "dname_1", "longitude", "latitude", \'PERCULATION_TANK\' as "type", "iwm_wcs_id" ' +
                 'from "' + postgresTables["PERCU_TANKS"] + '" ' +
                 'where CAST("iwm_storag" as DECIMAL) > 0' +
-                'order by "geom" <-> st_setsrid(st_makepoint(' + lat + ',' + lng + '),4326) ' +
+                'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
         return '-1';
@@ -174,6 +174,7 @@ module.exports = function (client) {
         var data = [];
         for (var row in result.rows){
             var single_row = result.rows[row];
+            //Structuring the Data
             single_row = ((data) => {
             var new_data = {};
             for (var key in data){
