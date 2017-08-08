@@ -17,7 +17,7 @@ module.exports = function (client) {
         // so the `app.post('/', ...` route will receive the
         // result of our form
         var data = req.body;
-        // var data = jsonfile.readFileSync("D:/node/logs/JSON_1501657336949.json");
+        // var data = jsonfile.readFileSync("JSON_wcsService1502058101483.json");
         //If no data is received, it will send back response 0
         if (Object.keys(data).length == 0)
             return res.send("0");
@@ -46,7 +46,7 @@ module.exports = function (client) {
                     insertWCSData(id, rowd);
                     rcount++;
                 } else {
-                    logError("wcsDataService: ID " + id + " does not have property dailyStorageData");
+                    logError('wcsDataService: ID ' + id + ' does not have property dailyStorageData OR Date is more than 30 days old. \n');
                 }
             }
         }
