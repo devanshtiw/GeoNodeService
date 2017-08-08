@@ -172,8 +172,20 @@ module.exports = function (client) {
             logError('wcsDataService: Problem in Table, 0 rows fetched \n' + query);
         }
         var data = [];
-        for (var row in result.rows)
-            data.push(result.rows[row]);
+        for (var row in result.rows){
+            var single_row = result.rows[row];
+            single_row = ((data) => {
+            var new_data = {};
+            for (var key in data){
+                if(isNaN(parseFloat(data[key])))
+                    new_data[postgresAttributes[key]] = data[key];
+                else
+                    new_data[postgresAttributes[key]] = parseFloat(data[key]);
+            }
+            return new_data;
+        })(single_row);
+            data.push(single_row);
+        }
         return data;
         // console.log('Data fetched: ' + result.rowCount);
         // console.log(result.rows);
@@ -256,6 +268,26 @@ module.exports = function (client) {
         "PERCU_TANKS": "pt_view",
         "OTHER_WC": "others_view",
         "IWM_DATA": "iwm_data"
+    }
+
+
+    
+    var postgresAttributes = {
+        "external_id": "externalID",
+        "capacity": "storageCapacity",
+        "pump_capac": "storageCapacity",
+        "new_villag": "villageName",
+        "dsply_n": "mandalName",
+        "dname_1": "districtName",
+        "longitude": "longitude",
+        "latitude": "latitude",
+        "type": "type",
+        "iwm_wcs_id": "waterStructureID",
+        "source_type": "sourceType",
+        "iwm_image_": "imageURL",
+        "iwm_timest": "eventGenDay",
+        "iwm_storag": "storageValue",
+        "ca_sq_km": "catchmentArea"
     }
 
     return service;
