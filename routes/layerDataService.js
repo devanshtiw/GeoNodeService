@@ -21,7 +21,7 @@ module.exports = function (client) {
         //If no data is received, it will send back response 0
 
         if (Object.keys(data).length == 0)
-            return res.send("0");
+            return res.send('No Input');
         // else
         // console.log('layerDataService: ' + new Date().toString() + ": Data Received");
         // var file = 'logs/JSON_layerService' + new Date().getTime().toString() + '.json';
@@ -31,10 +31,14 @@ module.exports = function (client) {
         // });
         var latlngs = getFormattedData(data);
         if (latlngs == -1)
-            return res.send('-1');
+            return res.send('Invalid Input');
         var latlngData = {};
         for (var i = 0; i < latlngs.length; i++) {
-            var completeData = await fetchFromDBAssociation(latlngs[i]);
+            var completeData
+            if(validateBbox(latlngs[i]))
+                completeData = await fetchFromDBAssociation(latlngs[i]);
+            else
+                completeData = 'Outside Bbox'
             //  if(completeData != -1)
             latlngData[latlngs[i]] = completeData;
         }
@@ -52,7 +56,7 @@ module.exports = function (client) {
         //If no data is received, it will send back response 0
 
         if (Object.keys(data).length == 0)
-            return res.send("0");
+            return res.send("No Input");
 
         var latlngs = getFormattedData(data);
         var count = ((d) => {
@@ -62,15 +66,22 @@ module.exports = function (client) {
                 return 1;
         })(data);
         if (latlngs == -1)
-            return res.send('-1');
+            return res.send('Invalid Input');
         var latlngData = {};
         for (var i = 0; i < latlngs.length; i++) {
-            var completeData = await fetchFromDBVillages(latlngs[i], count);
+            var completeData
+            if(validateBbox(latlngs[i]))
+                completeData = await fetchFromDBVillages(latlngs[i], count);
+            else
+                completeData = 'Outside Bbox'
             //  if(completeData != -1)
             latlngData[latlngs[i]] = completeData;
         }
         res.json(latlngData);
+    }
 
+    function validateBbox(latlng){
+        return parseFloat(latlng[0]) < 19.20 && parseFloat(latlng[0]) > 12.60 && parseFloat(latlng[1]) < 84.80 && parseFloat(latlng[1]) > 76.70
     }
 
     async function fetchFromDBVillages(latlng, count){
@@ -117,21 +128,21 @@ module.exports = function (client) {
         }
 
         if (villageData.rowCount > 1) {
-            logError("layerDataService: More than one Villages found for a lattitude and longitude (Query)\n" + querystmt[0]);
+            logError('layerDataService: More than one Villages found for a lattitude and longitude (Query)\n' + querystmt[0]);
             // console.log("layerDataService: More than one Villages found for a lattitude and longitude (Query)\n" + querystmt[0]);
-            return '-2'
+            return 'Conflict: More than 1 vilalge'
         } else if (villageData.rowCount == 0) {
-            logError("layerDataService: No Village found for the given lattitude and longitude (Query)\n" + querystmt[0]);
+            logError('layerDataService: No Village found for the given lattitude and longitude (Query)\n' + querystmt[0]);
             // console.log("layerDataService: No Village found for the given lattitude and longitude (Query)\n" + querystmt[0]);
-            return '0';
+            return 'No village for given lat-lng';
         } else if (basinData.rowCount > 1) {
-            logError("layerDataService: More than one Villages found for a lattitude and longitude (Query)\n" + querystmt[1]);
-            // console.log("layerDataService: More than one Villages found for a lattitude and longitude (Query)\n" + querystmt[1]);
-            return '-2'
+            logError('layerDataService: More than one basin found for a lattitude and longitude (Query)\n' + querystmt[1]);
+            // console.log("layerDataService: More than one basin found for a lattitude and longitude (Query)\n" + querystmt[1]);
+            return 'Conflict: More than 1 Basin'
         } else if (basinData.rowCount == 0) {
-            logError("layerDataService: No Village found for the given lattitude and longitude (Query)\n" + querystmt[1]);
-            // console.log("layerDataService: No Village found for the given lattitude and longitude (Query)\n" + querystmt[1]);
-            return '0';
+            logError('layerDataService: No basin found for the given lattitude and longitude (Query)\n' + querystmt[1]);
+            // console.log("layerDataService: No basin found for the given lattitude and longitude (Query)\n" + querystmt[1]);
+            return 'No basin for given lat-lng';
         }
         var finalData = Object.assign({}, villageData.rows['0'], basinData.rows['0']);
         return finalData;
@@ -143,7 +154,7 @@ module.exports = function (client) {
         if (data.hasOwnProperty('latlng'))
             var latlngs = data['latlng'].split('#');
         else {
-            logError("layerDataService: No latlng property is present in the request. " + data);
+            logError('layerDataService: No latlng property is present in the request. ' + data + '\n');
             return -1;
         }
         for (var i = 0; i < latlngs.length; i++) {

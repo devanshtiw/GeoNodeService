@@ -61,6 +61,8 @@ module.exports = function (client) {
         // var data = jsonfile.readFileSync("/home/devansh/Desktop/Node/NodeService/logs/JSON_1500972522824.json");
         //If no data is received, it will send back response 0
 
+        if(!(parseFloat(req.query.lat) < 19.20 && parseFloat(req.query.lat) > 12.60 && parseFloat(req.query.lng) < 84.80 && parseFloat(req.query.lng) > 76.70))
+            return res.json('Outside Bbox')
         var checkdams_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["CHECKDAMS"]);
         var borewells_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["BOREWELLS"]);
         var farmponds_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["FARMPONDS"]);
