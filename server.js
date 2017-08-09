@@ -61,6 +61,8 @@ router.post('/api/layerservice', layerDataService.getAssociationData)
 
 router.get('/api/nearestStructures', wcsDataService.getNearestWCSStructures)
 
+router.post('/api/nNearestVillages',layerDataService.getNNearestVillages)
+
 var server = http.listen(port, function () {
     var host = server.address().address
     var port = server.address().port

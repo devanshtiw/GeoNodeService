@@ -6,7 +6,8 @@ var jsonfile = require('jsonfile'),
 module.exports = function (client) {
 
     var service = {
-        getAssociationData: getAssociationData
+        getAssociationData: getAssociationData,
+        getNNearestVillages: getNNearestVillages
     }
 
     async function getAssociationData(req, res) {
@@ -33,7 +34,7 @@ module.exports = function (client) {
             return res.send('-1');
         var latlngData = {};
         for (var i = 0; i < latlngs.length; i++) {
-            var completeData = await fetchFromDB(latlngs[i]);
+            var completeData = await fetchFromDBAssociation(latlngs[i]);
             //  if(completeData != -1)
             latlngData[latlngs[i]] = completeData;
         }
@@ -41,21 +42,77 @@ module.exports = function (client) {
         // console.log('layerDataService: ' + new Date().toString() + ": Data Delivered.");
     }
 
-    async function fetchFromDB(latlng) {
+    async function getNNearestVillages(req, res){
+        // console.log('layerDataService: ' + req);
+        // The form's action is '/' and its method is 'POST',
+        // so the `app.post('/', ...` route will receive the
+        // result of our form
+        var data = req.body;
+        // var data = jsonfile.readFileSync("/home/devansh/\Desktop/Node/NodeService/logs/JSON_1500972522824.json");
+        //If no data is received, it will send back response 0
+
+        if (Object.keys(data).length == 0)
+            return res.send("0");
+
+        var latlngs = getFormattedData(data);
+        var count = ((d) => {
+            if(d.hasOwnProperty('count'))
+                return d['count'];
+            else
+                return 1;
+        })(data);
+        if (latlngs == -1)
+            return res.send('-1');
+        var latlngData = {};
+        for (var i = 0; i < latlngs.length; i++) {
+            var completeData = await fetchFromDBVillages(latlngs[i], count);
+            //  if(completeData != -1)
+            latlngData[latlngs[i]] = completeData;
+        }
+        res.json(latlngData);
+
+    }
+
+    async function fetchFromDBVillages(latlng, count){
+        //Below query is to get nearest Village Map(Along with microbasin, subbasin, basin)
+
+        // SELECT dmv_code, dname as "District", dsply_n_1 as "Mandal", new_villag as "Village", old_villag as "Old_ShapefileName",
+        // "AP_Microbasin".dsply_n as "Micro_Basin", basin_name as "Basin", mi_basin as "Sub_Basin"  FROM 
+        // "AP_Village" JOIN "AP_Microbasin" on  ST_contains("AP_Microbasin".geom,ST_SetSRID(ST_POINTONSURFACE("AP_Village".geom),4326))
+        // ORDER BY "AP_Village".geom <-> st_setsrid(ST_Point(77.37,15.16),4326) limit 3;
+
+        var querystmt = 'SELECT dmv_code, dname as '+ 
+        '"District", dsply_n_1 as "Mandal", new_villag as "Village", old_villag as "Old_ShapefileName"' +
+        ' FROM "ap_village" order by  geom <-> st_setsrid(ST_Point(' + latlng[1] + ',' + latlng[0] + '),4326) limit ' + count + ';';
+         try {
+            var nearestVillageData = await client.query(querystmt);
+        } catch (err) {
+            // console.log('layerDataService: Error while executing query\n ' + err);
+            logError('layerDataService: Error while executing query for Nearest Villages\n ' + err);
+            return '-1';
+        }
+        var listOfVillages = [];
+        for(var row in nearestVillageData.rows){
+            listOfVillages.push(nearestVillageData.rows[row]);
+        }
+        return listOfVillages;
+    }
+
+    async function fetchFromDBAssociation(latlng) {
         var querystmt = prepareQuery(latlng);
         //  console.log('layerDataService: ' + querystmt);
         try {
             var villageData = await client.query(querystmt[0]);
         } catch (err) {
             //console.log('layerDataService: Error while executing query\n ' + err);
-            logError('layerDataService: Error while executing query\n ' + err);
+            logError('layerDataService: Error while executing query for Association\n ' + err);
             return '-1';
         }
         try {
             var basinData = await client.query(querystmt[1]);
         } catch (err) {
             // console.log('layerDataService: Error while executing query\n ' + err);
-            logError('layerDataService: Error while executing query\n ' + err);
+            logError('layerDataService: Error while executing query for Association\n ' + err);
             return '-1';
         }
 
