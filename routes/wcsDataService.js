@@ -19,6 +19,8 @@ module.exports = function (client) {
         var data = req.body;
         // var data = jsonfile.readFileSync("JSON_wcsService1502058101483.json");
         //If no data is received, it will send back response 0
+        if(req.headers['content-type'] != 'application/json')
+            return res.json('Content not application/json')
         if (Object.keys(data).length == 0)
             return res.send("0");
         else
@@ -112,11 +114,12 @@ module.exports = function (client) {
 
     //getQuery1For will give closest structures with storage greater than 0
     function getQuery1For(lng, lat, tablename) {
+
         if (tablename === postgresTables["CHECKDAMS"]) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'CHECKDAMS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["CHECKDAMS"] + '" ' +
-                'where CAST("iwm_storag" as DECIMAL) > 0' +
+                'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
@@ -131,7 +134,7 @@ module.exports = function (client) {
             return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["FARMPONDS"] + '" ' +
-                'where CAST("iwm_storag" as DECIMAL) > 0' +
+                'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
@@ -139,7 +142,7 @@ module.exports = function (client) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", "iwm_timest", "iwm_image_", \'MI_TANKS\' as "type", "iwm_wcs_id" ' +
                 'from "' + postgresTables["MI_TANKS"] + '"' +
-                'where CAST("iwm_storag" as DECIMAL) > 0 ' +
+                'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
@@ -147,7 +150,7 @@ module.exports = function (client) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "longitude", "latitude", "iwm_storag", \'OTHERS_WC\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
                 'from "' + postgresTables["OTHER_WC"] + '"' +
-                'where CAST("iwm_storag" as DECIMAL) > 0' +
+                'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
@@ -155,7 +158,7 @@ module.exports = function (client) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n",' +
                 ' "dname_1", "longitude", "latitude", \'PERCULATION_TANK\' as "type", "iwm_wcs_id" ' +
                 'from "' + postgresTables["PERCU_TANKS"] + '" ' +
-                'where CAST("iwm_storag" as DECIMAL) > 0' +
+                'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
@@ -273,8 +276,6 @@ module.exports = function (client) {
         "IWM_DATA": "iwm_data"
     }
 
-
-    
     var postgresAttributes = {
         "external_id": "externalID",
         "capacity": "storageCapacity",

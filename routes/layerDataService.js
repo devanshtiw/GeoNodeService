@@ -19,7 +19,8 @@ module.exports = function (client) {
         var data = req.body;
         // var data = jsonfile.readFileSync("/home/devansh/\Desktop/Node/NodeService/logs/JSON_1500972522824.json");
         //If no data is received, it will send back response 0
-
+        if(req.headers['content-type'] != 'application/json')
+            return res.json('Content not application/json')
         if (Object.keys(data).length == 0)
             return res.send('No Input');
         // else
@@ -54,6 +55,8 @@ module.exports = function (client) {
         var data = req.body;
         // var data = jsonfile.readFileSync("/home/devansh/\Desktop/Node/NodeService/logs/JSON_1500972522824.json");
         //If no data is received, it will send back response 0
+        if(req.headers['content-type'] != 'application/json')
+            return res.json('Content not application/json')
 
         if (Object.keys(data).length == 0)
             return res.send("No Input");
