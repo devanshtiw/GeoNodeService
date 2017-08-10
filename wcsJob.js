@@ -40,7 +40,7 @@ var job = new CronJob('00 00 04 * * *', function() {
 );
 
 function logError(error) {
-    var file = 'logs/cronJob' + new Date().toJSON().slice(0, 10).replace(/-/g, '_') + '.txt';
+    var file = 'logs/wcsJob' + new Date().toJSON().slice(0, 10).replace(/-/g, '_') + '.txt';
     fs.appendFile(file, error + '\n', function(err) {
         if (err) {
             console.log(err);
