@@ -20,9 +20,9 @@ module.exports = function (client) {
         // var data = jsonfile.readFileSync("JSON_wcsService1502058101483.json");
         //If no data is received, it will send back response 0
         if(req.headers['content-type'] != 'application/json')
-            return res.json('Content not application/json')
+            return res.json('-1')
         if (Object.keys(data).length == 0)
-            return res.send("0");
+            return res.send('-4');
         else
             console.log('wcsDataService: ' + new Date().toString() + ': Data Received');
         var file = 'logs/JSON_wcsService' + new Date().getTime().toString() + '.json';
@@ -64,7 +64,7 @@ module.exports = function (client) {
         //If no data is received, it will send back response 0
 
         if(!(parseFloat(req.query.lat) < 19.20 && parseFloat(req.query.lat) > 12.60 && parseFloat(req.query.lng) < 84.80 && parseFloat(req.query.lng) > 76.70))
-            return res.json('Outside Bbox')
+            return res.json('0')
         var checkdams_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["CHECKDAMS"]);
         var borewells_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["BOREWELLS"]);
         var farmponds_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["FARMPONDS"]);
@@ -105,7 +105,7 @@ module.exports = function (client) {
         if (tablename === postgresTables["FARMPONDS"]) {
             return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
-                'from "' + postgresTables["FARMPONDS"] + '" ' +
+                'from "' + postgresTables["FARMPONDS"] + '"' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 1'
         }

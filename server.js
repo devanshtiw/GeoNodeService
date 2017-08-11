@@ -57,7 +57,7 @@ var layerDataService = require('./routes/layerDataService')(client);
 
 router.post('/api/wcs', wcsDataService.updateWcsBusinessData)
 
-router.post('/api/layerservice', layerDataService.getAssociationData)
+router.post('/api/locationmap', layerDataService.getAssociationData)
 
 router.get('/api/nearestStructures', wcsDataService.getNearestWCSStructures)
 
