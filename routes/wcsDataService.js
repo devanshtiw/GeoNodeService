@@ -8,7 +8,8 @@ module.exports = function (client) {
 
     var service = {
         updateWcsBusinessData: updateWcsBusinessData,
-        getNearestWCSStructures: getNearestWCSStructures
+        getNearestWCSStructures: getNearestWCSStructures,
+        updateMiTanksCapacity: updateMiTanksCapacity
     }
 
     function updateWcsBusinessData(req, res) {
@@ -24,7 +25,7 @@ module.exports = function (client) {
         if (Object.keys(data).length == 0)
             return res.send('-4');
         else
-            console.log('wcsDataService: ' + new Date().toString() + ': Data Received');
+            console.log('updateWcsBusinessData: ' + new Date().toString() + ': Data Received');
         var file = 'logs/JSON_wcsService' + new Date().getTime().toString() + '.json';
         jsonfile.writeFile(file, data, function (err) {
             if (err)
@@ -65,14 +66,14 @@ module.exports = function (client) {
 
         if(!(parseFloat(req.query.lat) < 19.20 && parseFloat(req.query.lat) > 12.60 && parseFloat(req.query.lng) < 84.80 && parseFloat(req.query.lng) > 76.70))
             return res.json('0')
-        var checkdams_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["CHECKDAMS"]);
-        var borewells_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["BOREWELLS"]);
-        var farmponds_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["FARMPONDS"]);
-        var mitanks_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["MI_TANKS"]);
-        var others_query = getQuery1For(req.query.lng, req.query.lat, postgresTables["OTHER_WC"]);
-        var pt_query = getQuery1For (req.query.lng, req.query.lat, postgresTables["PERCU_TANKS"]);
+        var checkdams_query = getQuery1For(req.query.lng, req.query.lat, postgresViews["CHECKDAMS"]);
+        var borewells_query = getQuery1For(req.query.lng, req.query.lat, postgresViews["BOREWELLS"]);
+        var farmponds_query = getQuery1For(req.query.lng, req.query.lat, postgresViews["FARMPONDS"]);
+        var mitanks_query = getQuery1For(req.query.lng, req.query.lat, postgresViews["MI_TANKS"]);
+        var others_query = getQuery1For(req.query.lng, req.query.lat, postgresViews["OTHER_WC"]);
+        var pt_query = getQuery1For (req.query.lng, req.query.lat, postgresViews["PERCU_TANKS"]);
 
-        var farmponds_query0 = getQuery0For( req.query.lng, req.query.lat, postgresTables["FARMPONDS"])
+        var farmponds_query0 = getQuery0For( req.query.lng, req.query.lat, postgresViews["FARMPONDS"])
 
         var farmponds0 = await executeQuery(farmponds_query0);
 
@@ -100,12 +101,54 @@ module.exports = function (client) {
         res.json(closestWCS)
     }
 
+    function updateMiTanksCapacity(req, res){
+        // console.log('wcsDataService: ' + req);
+        // The form's action is '/' and its method is 'POST',
+        // so the `app.post('/', ...` route will receive the
+        // result of our form
+        var data = req.body;
+        // var data = jsonfile.readFileSync("JSON_wcsService1502058101483.json");
+        //If no data is received, it will send back response 0
+        if(req.headers['content-type'] != 'application/json')
+            return res.json('-1')
+        if (Object.keys(data).length == 0)
+            return res.send('-4');
+        else
+            console.log('updateWcsCapacity: ' + new Date().toString() + ': Data Received');
+        var file = 'logs/JSON_wcsUpdateCapacity' + new Date().getTime().toString() + '.json';
+        jsonfile.writeFile(file, data, function (err) {
+            if (err)
+                console.log('wcsDataService: ' + err);
+        });
+        for(var id in data){
+            if(id != null)
+            updateCapacity(id, data[id]);
+        }
+        res.send("201")
+    }
+
+    function updateCapacity(id, newCapacity){
+        var querystmt = 'UPDATE "' + postgresTables["MI_TANKS"] + '" SET capacity =\'' + newCapacity + '\'' +
+        ' WHERE iwm_wcs_id = \'' + id + '\';';
+        var query = client.query(querystmt, function (err, result) {
+            if (err) {
+                logError('updateMiTanksCapacity: Unable to run the query \n' + querystmt);
+                logError(err);
+                //  console.log('updateMiTanksCapacity: ' + err);
+            } else {
+                // console.log('updateMiTanksCapacity: ' + new Date().toString() + ": Rows Updated: " + result.rowCount);
+                if (result.rowCount == 0)
+                    logError('updateMiTanksCapacity: Not Changed for: ' + id + ' does not exist. \n');
+            }
+        });
+    }
+
     //getQuery0For will give closest structure including zero storage
     function getQuery0For(lng, lat, tablename) {
-        if (tablename === postgresTables["FARMPONDS"]) {
+        if (tablename === postgresViews["FARMPONDS"]) {
             return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
-                'from "' + postgresTables["FARMPONDS"] + '"' +
+                'from "' + postgresViews["FARMPONDS"] + '"' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 1'
         }
@@ -115,49 +158,49 @@ module.exports = function (client) {
     //getQuery1For will give closest structures with storage greater than 0
     function getQuery1For(lng, lat, tablename) {
 
-        if (tablename === postgresTables["CHECKDAMS"]) {
+        if (tablename === postgresViews["CHECKDAMS"]) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'CHECKDAMS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
-                'from "' + postgresTables["CHECKDAMS"] + '" ' +
+                'from "' + postgresViews["CHECKDAMS"] + '" ' +
                 'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
-        else if (tablename === postgresTables["BOREWELLS"]) {
+        else if (tablename === postgresViews["BOREWELLS"]) {
             return 'select "external_id", "pump_capac", "new_villag", "dsply_n", "dname_1", ' +
                 '"latitude", "longitude", "iwm_wcs_id", \'BOREWELLS\' as "type"' +
-                'from "' + postgresTables["BOREWELLS"] + '"' +
+                'from "' + postgresViews["BOREWELLS"] + '"' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3';
         }
-        else if (tablename === postgresTables["FARMPONDS"]) {
+        else if (tablename === postgresViews["FARMPONDS"]) {
             return 'select "external_id","capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", \'FARMPONDS\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
-                'from "' + postgresTables["FARMPONDS"] + '" ' +
+                'from "' + postgresViews["FARMPONDS"] + '" ' +
                 'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
-        else if (tablename === postgresTables["MI_TANKS"]) {
+        else if (tablename === postgresViews["MI_TANKS"]) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "latitude", "longitude", "iwm_storag", "iwm_timest", "iwm_image_", \'MI_TANKS\' as "type", "iwm_wcs_id" ' +
-                'from "' + postgresTables["MI_TANKS"] + '"' +
+                'from "' + postgresViews["MI_TANKS"] + '"' +
                 'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
-        else if (tablename === postgresTables["OTHER_WC"]) {
+        else if (tablename === postgresViews["OTHER_WC"]) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n", "dname_1",' +
                 ' "longitude", "latitude", "iwm_storag", \'OTHERS_WC\' as "type", "ca_sq_km", "iwm_timest", "iwm_image_", "iwm_wcs_id" ' +
-                'from "' + postgresTables["OTHER_WC"] + '"' +
+                'from "' + postgresViews["OTHER_WC"] + '"' +
                 'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
         }
-        else if (tablename === postgresTables["PERCU_TANKS"]) {
+        else if (tablename === postgresViews["PERCU_TANKS"]) {
             return 'select "external_id", "capacity", "new_villag", "dsply_n",' +
                 ' "dname_1", "longitude", "latitude", \'PERCULATION_TANK\' as "type", "iwm_wcs_id" ' +
-                'from "' + postgresTables["PERCU_TANKS"] + '" ' +
+                'from "' + postgresViews["PERCU_TANKS"] + '" ' +
                 'where CAST("iwm_storag" as DECIMAL) > 0 and CAST(iwm_storag as Decimal) > CAST(capacity as DECIMAL) * 0.20' +
                 'order by "geom" <-> st_setsrid(st_makepoint(' + lng + ',' + lat + '),4326) ' +
                 'limit 3'
@@ -266,6 +309,17 @@ module.exports = function (client) {
     }
 
     var postgresTables = {
+        "CHECKDAMS": "check_dams",
+        "FARMPONDS": "farm_ponds",
+        "BOREWELLS": "borewells",
+        "CHECKDAMS_P": "checkdam_proposed",
+        "MI_TANKS": "mi_tanks",
+        "PERCU_TANKS": "pt",
+        "OTHER_WC": "others",
+        "IWM_DATA": "iwm_data"
+    }
+
+    var postgresViews = {
         "CHECKDAMS": "check_dams_view",
         "FARMPONDS": "farm_ponds_view",
         "BOREWELLS": "borewells_view",
@@ -273,7 +327,6 @@ module.exports = function (client) {
         "MI_TANKS": "mi_tanks_view",
         "PERCU_TANKS": "pt_view",
         "OTHER_WC": "others_view",
-        "IWM_DATA": "iwm_data"
     }
 
     var postgresAttributes = {
