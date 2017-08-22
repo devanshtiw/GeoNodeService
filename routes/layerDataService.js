@@ -12,7 +12,7 @@ module.exports = function (client) {
 
     async function getAssociationData(req, res) {
 
-        // console.log('layerDataService: ' + req);
+        // console.log('getAssociationData: ' + req);
         // The form's action is '/' and its method is 'POST',
         // so the `app.post('/', ...` route will receive the
         // result of our form
@@ -24,11 +24,11 @@ module.exports = function (client) {
         if (Object.keys(data).length == 0)
             return res.send('-4');
         // else
-        // console.log('layerDataService: ' + new Date().toString() + ": Data Received");
+        // console.log('getAssociationData: ' + new Date().toString() + ": Data Received");
         // var file = 'logs/JSON_layerService' + new Date().getTime().toString() + '.json';
         // jsonfile.writeFile(file, data, function(err) {
         // if (err)
-        // console.log('layerDataService: ' + err);
+        // console.log('getAssociationData: ' + err);
         // });
         var latlngs = getFormattedData(data);
         if (latlngs == -1)
@@ -44,11 +44,11 @@ module.exports = function (client) {
             latlngData[latlngs[i]] = completeData;
         }
         res.json(latlngData);
-        // console.log('layerDataService: ' + new Date().toString() + ": Data Delivered.");
+        // console.log('getAssociationData: ' + new Date().toString() + ": Data Delivered.");
     }
 
     async function getNNearestVillages(req, res){
-        // console.log('layerDataService: ' + req);
+        // console.log('getNNearestVillages: ' + req);
         // The form's action is '/' and its method is 'POST',
         // so the `app.post('/', ...` route will receive the
         // result of our form
@@ -103,8 +103,8 @@ module.exports = function (client) {
          try {
             var nearestVillageData = await client.query(querystmt);
         } catch (err) {
-            // console.log('layerDataService: Error while executing query\n ' + err);
-            logError('layerDataService: Error while executing query for Nearest Villages\n ' + err);
+            // console.log('getNNearestVillages: Error while executing query\n ' + err);
+            logError('getNNearestVillages: Error while executing query for Nearest Villages\n ' + err);
             return '-1';
         }
         if(nearestVillageData.rowCount == 0)
@@ -118,12 +118,12 @@ module.exports = function (client) {
 
     async function fetchFromDBAssociation(latlng) {
         var querystmt = prepareQuery(latlng);
-        //  console.log('layerDataService: ' + querystmt);
+        //  console.log('getAssociationData: ' + querystmt);
         try {
             var villageData = await client.query(querystmt[0]);
         } catch (err) {
-            //console.log('layerDataService: Error while executing query\n ' + err);
-            logError('layerDataService: Error while executing query for Association\n ' + err);
+            //console.log('getAssociationData: Error while executing query\n ' + err);
+            logError('getAssociationData: Error while executing query for Association\n ' + err);
             return '-1';
         }
         try {
@@ -135,20 +135,20 @@ module.exports = function (client) {
         }
 
         if (villageData.rowCount > 1) {
-            logError('layerDataService: More than one Villages found for a lattitude and longitude (Query)\n' + querystmt[0]);
-            // console.log("layerDataService: More than one Villages found for a lattitude and longitude (Query)\n" + querystmt[0]);
+            logError('getAssociationData: More than one Villages found for a lattitude and longitude (Query)\n' + querystmt[0]);
+            // console.log("getAssociationData: More than one Villages found for a lattitude and longitude (Query)\n" + querystmt[0]);
             return 'Conflict: More than 1 vilalge'
         } else if (villageData.rowCount == 0) {
-            logError('layerDataService: No Village found for the given lattitude and longitude (Query)\n' + querystmt[0]);
-            // console.log("layerDataService: No Village found for the given lattitude and longitude (Query)\n" + querystmt[0]);
+            logError('getAssociationData: No Village found for the given lattitude and longitude (Query)\n' + querystmt[0]);
+            // console.log("getAssociationData: No Village found for the given lattitude and longitude (Query)\n" + querystmt[0]);
             return '0';
         } else if (basinData.rowCount > 1) {
-            logError('layerDataService: More than one basin found for a lattitude and longitude (Query)\n' + querystmt[1]);
-            // console.log("layerDataService: More than one basin found for a lattitude and longitude (Query)\n" + querystmt[1]);
+            logError('getAssociationData: More than one basin found for a lattitude and longitude (Query)\n' + querystmt[1]);
+            // console.log("getAssociationData: More than one basin found for a lattitude and longitude (Query)\n" + querystmt[1]);
             return 'Conflict: More than 1 Basin'
         } else if (basinData.rowCount == 0) {
-            logError('layerDataService: No basin found for the given lattitude and longitude (Query)\n' + querystmt[1]);
-            // console.log("layerDataService: No basin found for the given lattitude and longitude (Query)\n" + querystmt[1]);
+            logError('getAssociationData: No basin found for the given lattitude and longitude (Query)\n' + querystmt[1]);
+            // console.log("getAssociationData: No basin found for the given lattitude and longitude (Query)\n" + querystmt[1]);
             return '0';
         }
         var finalData = Object.assign({}, villageData.rows['0'], basinData.rows['0']);
@@ -161,7 +161,7 @@ module.exports = function (client) {
         if (data.hasOwnProperty('latlng'))
             var latlngs = data['latlng'].split('#');
         else {
-            logError('layerDataService: No latlng property is present in the request. ' + data + '\n');
+            logError('getNNearestVillages: No latlng property is present in the request. ' + data + '\n');
             return -1;
         }
         for (var i = 0; i < latlngs.length; i++) {

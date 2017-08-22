@@ -13,7 +13,7 @@ module.exports = function (client) {
     }
 
     function updateWcsBusinessData(req, res) {
-        // console.log('wcsDataService: ' + req);
+        // console.log('updateWcsBusinessData: ' + req);
         // The form's action is '/' and its method is 'POST',
         // so the `app.post('/', ...` route will receive the
         // result of our form
@@ -26,10 +26,10 @@ module.exports = function (client) {
             return res.send('-4');
         else
             console.log('updateWcsBusinessData: ' + new Date().toString() + ': Data Received');
-        var file = 'logs/JSON_wcsService' + new Date().getTime().toString() + '.json';
+        var file = 'logs/JSON_wcsBusinessData' + new Date().getTime().toString() + '.json';
         jsonfile.writeFile(file, data, function (err) {
             if (err)
-                console.log('wcsDataService: ' + err);
+                console.log('updateWcsBusinessData: ' + err);
         });
         res.send("201");
 
@@ -49,11 +49,11 @@ module.exports = function (client) {
                     insertWCSData(id, rowd);
                     rcount++;
                 } else {
-                    logError('wcsDataService: ID ' + id + ' does not have property dailyStorageData OR Date is more than 30 days old. \n');
+                    logError('updateWcsBusinessData: ID ' + id + ' does not have property dailyStorageData OR Date is more than 30 days old. \n');
                 }
             }
         }
-        console.log('wcsDataService: ' + new Date().toString() + ": Rows Processed: " + rcount);
+        console.log('updateWcsBusinessData: ' + new Date().toString() + ": Rows Processed: " + rcount);
     }
 
     async function getNearestWCSStructures(req, res) {
@@ -102,7 +102,7 @@ module.exports = function (client) {
     }
 
     function updateMiTanksCapacity(req, res){
-        // console.log('wcsDataService: ' + req);
+        // console.log('updateMiTanksCapacity: ' + req);
         // The form's action is '/' and its method is 'POST',
         // so the `app.post('/', ...` route will receive the
         // result of our form
@@ -114,11 +114,11 @@ module.exports = function (client) {
         if (Object.keys(data).length == 0)
             return res.send('-4');
         else
-            console.log('updateWcsCapacity: ' + new Date().toString() + ': Data Received');
-        var file = 'logs/JSON_wcsUpdateCapacity' + new Date().getTime().toString() + '.json';
+            console.log('updateMiTanksCapacity: ' + new Date().toString() + ': Data Received');
+        var file = 'logs/JSON_MiTanksCapacity' + new Date().getTime().toString() + '.json';
         jsonfile.writeFile(file, data, function (err) {
             if (err)
-                console.log('wcsDataService: ' + err);
+                console.log('updateMiTanksCapacity: ' + err);
         });
         for(var id in data){
             if(id != null)
@@ -285,13 +285,13 @@ module.exports = function (client) {
             rowdata[1] + '\' , iwm_image_ = \'' + rowdata[2] + '\' , source_type = \'' + rowdata[3] + '\' WHERE iwm_wcs_id = \'' + id + '\';';
         var query = client.query(querystmt, function (err, result) {
             if (err) {
-                logError('wcsDataService: Unable to run the query \n' + querystmt);
+                logError('updateWcsBusinessData: Unable to run the query \n' + querystmt);
                 logError(err);
-                //  console.log('wcsDataService: ' + err);
+                //  console.log('updateWcsBusinessData: ' + err);
             } else {
-                // console.log('wcsDataService: ' + new Date().toString() + ": Rows Updated: " + result.rowCount);
+                // console.log('updateWcsBusinessData: ' + new Date().toString() + ": Rows Updated: " + result.rowCount);
                 if (result.rowCount == 0)
-                    logError('wcsDataService: Not Changed for: ' + id + ' does not exist. \n');
+                    logError('updateWcsBusinessData: Not Changed for: ' + id + ' does not exist. \n');
             }
         });
     }
