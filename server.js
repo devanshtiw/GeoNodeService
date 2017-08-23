@@ -13,7 +13,7 @@ const connectionString = process.env.DATABASE_URL || "postgres://postgres:postgr
 const client = new pg.Client(connectionString);
 client.connect(function (err) {
 if (err)
-    logError("server: Connection Failed. \n" + err);
+    console.log("server: Connection Failed. \n" + err);
 });
 
 client.on('error', function (err) {

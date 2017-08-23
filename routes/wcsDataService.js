@@ -122,7 +122,7 @@ module.exports = function (client) {
         });
         for(var id in data){
             if(id != null)
-            updateCapacity(id, data[id]);
+                updateCapacity(id, data[id]);
         }
         res.send("201")
     }
