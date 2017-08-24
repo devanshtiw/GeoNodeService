@@ -87,7 +87,7 @@ module.exports = function (client) {
         return parseFloat(latlng[0]) < 19.20 && parseFloat(latlng[0]) > 12.60 && parseFloat(latlng[1]) < 84.80 && parseFloat(latlng[1]) > 76.70
     }
 
-    async function (latlng, count){
+    async function fetchFromDBVillages(latlng, count){
         //Below query is to get nearest Village Map(Along with microbasin, subbasin, basin)
 
         // SELECT dmv_code, dname as "District", dsply_n_1 as "Mandal", new_villag as "Village", old_villag as "Old_ShapefileName",
