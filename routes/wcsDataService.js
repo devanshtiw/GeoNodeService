@@ -9,7 +9,8 @@ module.exports = function (client) {
     var service = {
         updateWcsBusinessData: updateWcsBusinessData,
         getNearestWCSStructures: getNearestWCSStructures,
-        updateMiTanksCapacity: updateMiTanksCapacity
+        updateMiTanksCapacity: updateMiTanksCapacity,
+        updateWcsMetaData: updateWcsMetaData
     }
 
     function updateWcsBusinessData(req, res) {
@@ -296,6 +297,58 @@ module.exports = function (client) {
         });
     }
 
+    function updateWcsMetaData(req, res){
+         var data = req.body;
+        // var data = jsonfile.readFileSync("JSON_wcsService1502058101483.json");
+        //If no data is received, it will send back response 0
+        if(req.headers['content-type'] != 'application/json')
+            return res.sendStatus('-1')
+        if (Object.keys(data).length == 0)
+            return res.sendStatus('-4');
+        else
+            console.log('updateWcsMetaData: ' + new Date().toString() + ': Data Received');
+        var wcs_system = data['systemID'];
+        console.log(data['systemID']);
+        console.log(wcs_system);
+        var iwm_wcs_id = data['wcID'];
+        var lat = parseFloat(data['lat']);
+        var lon = parseFloat(data['lon']);
+        var capacity = parseFloat(data['capacity']);
+        var ca_sq_km = parseFloat(data['catchmentArea']);
+        var nrsc5GridID = data['nrsc5GridID'];
+        var dmv_code = data['dmvCode'];
+        var mBID = data['microBasinID'];
+        var mID = data['mandalID'];
+        var type = data['wcType'];
+        var bluefrog_i = data['workcode'];
+        var iwm_timest = data['insertTs'];
+        var new_villag = data['village'];
+        var dname_1 = data['district'];
+        var dsply_n = data['mandal'];
+        var basin_name = data['basin'];
+        var mi_basin = data['subBasin'];
+        //var iwm_storag = data['storage'];
+        var dsply_n_1 = data['microBasin'];
+        var querystmt = 'INSERT INTO ' + postgresTablesFromWcTypeID[type] + ' (geom, bluefrog_i, wcs_system, type, latitude, longitude,'+ 
+        'capacity, ca_sq_km, dmv_code, new_villag, dname_1, dsply_n, basin_name, mi_basin, iwm_wcs_id,' +
+        'iwm_timest, dsply_n_1) VALUES ((SELECT ST_Multi(ST_SetSRID(ST_MakePoint('+lon+','+lat+'),4326)) as geom),\''+bluefrog_i+'\',\''
+        +wcs_system+'\',\''+type+'\','+lat+','+lon+','+capacity+','+ca_sq_km+',\''+dmv_code+'\',\''+new_villag+'\',\''+dname_1+'\',\''+dsply_n+'\',\''
+        +basin_name+'\',\''+mi_basin+'\',\''+iwm_wcs_id+'\',\''+iwm_timest+'\',\''+dsply_n_1+'\');'
+        console.log("Query is: " + querystmt );
+        var query = client.query(querystmt, function (err, result) {
+            if (err) {
+                logError('wcsDataService: Unable to run the query \n' + querystmt);
+                logError(err);
+            } else {
+                // console.log('wcsDataService: ' + new Date().toString() + ": Rows Updated: " + result.rowCount);
+                if (result.rowCount == 0)
+                    logError('No row inserted \n');
+            }
+        });
+        //console.log('wcsDataService: ' + new Date().toString() + ": Rows Processed: " + rcount);
+        res.sendStatus(201);
+
+    }
     //Function to lof error in the file format (Log_Date.txt) and the error text passed as parameter to the function.
     function logError(error) {
         var file = './logs/Log_WCSDataService' + new Date().toJSON().slice(0, 10).replace(/-/g, '_') + '.txt';
@@ -317,6 +370,17 @@ module.exports = function (client) {
         "PERCU_TANKS": "pt",
         "OTHER_WC": "others",
         "IWM_DATA": "iwm_data"
+    }
+
+
+    var postgresTablesFromWcTypeID = {
+        "2": "check_dams",
+        "1": "farm_ponds",
+        "6": "borewells",
+        "3": "checkdam_proposed",
+        "5": "mi_tanks",
+        "4": "pt",
+        "7": "others",
     }
 
     var postgresViews = {

@@ -65,6 +65,8 @@ router.post('/api/nNearestVillages',layerDataService.getNNearestVillages)
 
 router.post('/api/updateMiTanksCapacity',wcsDataService.updateMiTanksCapacity)
 
+router.post('/api/updateWcsMetadata',wcsDataService.updateWcsMetaData)
+
 var server = http.listen(port, function () {
 var host = server.address().address
 var port = server.address().port
