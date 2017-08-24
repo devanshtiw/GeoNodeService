@@ -95,8 +95,8 @@ module.exports = function (client) {
         // "AP_Village" JOIN "AP_Microbasin" on  ST_contains("AP_Microbasin".geom,ST_SetSRID(ST_POINTONSURFACE("AP_Village".geom),4326))
         // ORDER BY "AP_Village".geom <-> st_setsrid(ST_Point(77.37,15.16),4326) limit 3;
 
-        var querystmt = 'SELECT dmv_code, dname as '+ 
-        '"District", dsply_n_1 as "Mandal", new_villag as "Village", old_villag as "Old_ShapefileName"' +
+        var querystmt = 'SELECT dmvcode, iwmdistric as '+ 
+        '"District", iwmmandal as "Mandal", iwmvillage as "Village", oldvillage as "Old_ShapefileName"' +
         ' FROM "ap_village" ' + 
         'where EXISTS(SELECT "dmv_code" FROM "ap_village"  where ST_contains(geom,ST_SetSRID(ST_Point(' + latlng[1] + ',' + latlng[0] + '),4326)))' + 
         'order by  geom <-> st_setsrid(ST_Point(' + latlng[1] + ',' + latlng[0] + '),4326) limit ' + count + ';';
