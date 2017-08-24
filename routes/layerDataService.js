@@ -87,7 +87,7 @@ module.exports = function (client) {
         return parseFloat(latlng[0]) < 19.20 && parseFloat(latlng[0]) > 12.60 && parseFloat(latlng[1]) < 84.80 && parseFloat(latlng[1]) > 76.70
     }
 
-    async function fetchFromDBVillages(latlng, count){
+    async function (latlng, count){
         //Below query is to get nearest Village Map(Along with microbasin, subbasin, basin)
 
         // SELECT dmv_code, dname as "District", dsply_n_1 as "Mandal", new_villag as "Village", old_villag as "Old_ShapefileName",
@@ -176,7 +176,7 @@ module.exports = function (client) {
 
     function prepareQuery(latlng) {
         var query = [];
-        query.push('SELECT dmv_code, dname as "District", dsply_n_1 as "Mandal", new_villag as "Village", old_villag as "Old_ShapefileName" FROM "' +
+        query.push('SELECT dmvcode, iwmdistric as "District", iwmmandal as "Mandal", iwmvillage as "Village", oldvillage as "Old_ShapefileName" FROM "' +
             'ap_village' + '"  where ST_contains(geom,ST_SetSRID(ST_Point(' + latlng[1] + ',' + latlng[0] + '),4326))');
         query.push('SELECT dsply_n as "Micro_Basin", basin_name as "Basin", mi_basin as "Sub_Basin" FROM "' +
             'ap_microbasin' + '" where ST_contains(geom,ST_SetSRID(ST_Point(' + latlng[1] + ',' + latlng[0] + '),4326))');
